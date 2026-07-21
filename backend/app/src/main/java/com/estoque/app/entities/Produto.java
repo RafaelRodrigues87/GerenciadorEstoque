@@ -1,6 +1,5 @@
 package com.estoque.app.entities;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,9 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "produto", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_produto_codigo_barras", columnNames = "codigo_barras")
-})
+@Table(name = "produto")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,9 +29,6 @@ public class Produto {
 
     @Column(nullable = false, length = 150)
     private String nome;
-
-    @Column(name = "codigo_barras", length = 50)
-    private String codigoBarras;
 
     @Column(name = "preco_custo", nullable = false, precision = 10, scale = 2)
     private BigDecimal precoCusto;
@@ -66,7 +60,6 @@ public class Produto {
         this.ativo = true;
     }
 
-    // Regra de negócio simples que já pode morar na entidade: saber se está em alerta
     @Transient
     public boolean isEstoqueBaixo() {
         return this.quantidadeAtual != null

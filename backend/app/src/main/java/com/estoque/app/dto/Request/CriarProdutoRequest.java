@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 
 public record CriarProdutoRequest(
         @NotBlank @Size(max = 150) String nome,
-        @Size(max = 50) String codigoBarras,
         @NotNull Long categoriaId,
         @NotNull @DecimalMin(value = "0.0", inclusive = true) BigDecimal precoCusto,
         @NotNull @DecimalMin(value = "0.0", inclusive = true) BigDecimal precoVenda,

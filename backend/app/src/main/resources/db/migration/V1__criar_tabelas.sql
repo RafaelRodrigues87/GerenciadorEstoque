@@ -22,14 +22,12 @@ CREATE TABLE produto (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
     categoria_id        BIGINT          NOT NULL,
     nome                VARCHAR(150)    NOT NULL,
-    codigo_barras       VARCHAR(50),
     preco_custo         DECIMAL(10,2)   NOT NULL,
     preco_venda         DECIMAL(10,2)   NOT NULL,
     quantidade_atual    INT             NOT NULL DEFAULT 0,
     quantidade_minima   INT             NOT NULL DEFAULT 0,
     ativo               BOOLEAN         NOT NULL DEFAULT TRUE,
     criado_em           DATETIME        NOT NULL,
-    CONSTRAINT uk_produto_codigo_barras UNIQUE (codigo_barras),
     CONSTRAINT fk_produto_categoria FOREIGN KEY (categoria_id) REFERENCES categoria (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
