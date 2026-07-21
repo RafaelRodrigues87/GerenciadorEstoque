@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 
 @RestController
@@ -36,11 +37,6 @@ public class ProdutoController {
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(produtoService.buscarPorId(id));
-    }
-
-    @GetMapping("/codigo/{codigoBarras}")
-    public ResponseEntity<ProdutoResponse> buscarPorCodigoBarras(@PathVariable String codigoBarras) {
-        return ResponseEntity.ok(produtoService.buscarPorCodigoBarras(codigoBarras));
     }
 
     @GetMapping("/estoque-baixo")

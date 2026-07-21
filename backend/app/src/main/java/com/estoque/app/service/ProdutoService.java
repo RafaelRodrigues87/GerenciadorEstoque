@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+
 @Service
 @RequiredArgsConstructor
 public class ProdutoService {
@@ -33,7 +34,6 @@ public class ProdutoService {
         Produto produto = Produto.builder()
                 .categoria(categoria)
                 .nome(request.nome())
-                .codigoBarras(request.codigoBarras())
                 .precoCusto(request.precoCusto())
                 .precoVenda(request.precoVenda())
                 .quantidadeAtual(request.quantidadeAtual())
@@ -55,12 +55,6 @@ public class ProdutoService {
         return paraResponse(buscarProdutoOuFalhar(id));
     }
 
-    public ProdutoResponse buscarPorCodigoBarras(String codigoBarras) {
-        Produto produto = produtoRepository.findByCodigoBarras(codigoBarras)
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado para este código de barras"));
-        return paraResponse(produto);
-    }
-
     public List<ProdutoResponse> listarComEstoqueBaixo() {
         return produtoRepository.findComEstoqueBaixo()
                 .stream()
@@ -73,7 +67,6 @@ public class ProdutoService {
         Categoria categoria = buscarCategoriaOuFalhar(request.categoriaId());
 
         produto.setNome(request.nome());
-        produto.setCodigoBarras(request.codigoBarras());
         produto.setCategoria(categoria);
         produto.setPrecoCusto(request.precoCusto());
         produto.setPrecoVenda(request.precoVenda());
@@ -105,8 +98,6 @@ public class ProdutoService {
                 }
                 produto.setQuantidadeAtual(quantidadeAnterior - request.quantidade());
             }
-            // AJUSTE: usado numa contagem física de inventário, onde o número informado
-            // é o valor real contado na prateleira (substitui o que estava no sistema)
             case AJUSTE -> produto.setQuantidadeAtual(request.quantidade());
         }
 
@@ -141,7 +132,6 @@ public class ProdutoService {
         return new ProdutoResponse(
                 produto.getId(),
                 produto.getNome(),
-                produto.getCodigoBarras(),
                 produto.getCategoria().getId(),
                 produto.getCategoria().getNome(),
                 produto.getPrecoCusto(),

@@ -5,11 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
-
-    Optional<Produto> findByCodigoBarras(String codigoBarras);
 
     List<Produto> findByNomeContainingIgnoreCase(String nome);
 
