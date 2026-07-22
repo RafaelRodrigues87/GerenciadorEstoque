@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Package, ShoppingCart, Tag, History } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
+import ThemeToggle from './ThemeToggle'
 
 const itensMenu = [
   { rota: '/', rotulo: 'Painel', Icone: LayoutDashboard },
@@ -21,13 +22,18 @@ export default function Sidebar() {
     .toUpperCase()
 
   return (
-    <aside className="w-52 bg-neutral-50 border-r border-neutral-200 flex flex-col justify-between py-5">
+    <aside className="w-52 bg-neutral-50 dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 flex flex-col justify-between py-5">
       <div>
-        <div className="flex items-center gap-2 px-5 mb-7">
-          <div className="w-6 h-6 rounded-md bg-neutral-900 flex items-center justify-center">
-            <Package size={14} className="text-white" />
+        <div className="flex items-center justify-between px-5 mb-7">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-neutral-900 dark:bg-neutral-100 flex items-center justify-center">
+              <Package size={14} className="text-white dark:text-neutral-900" />
+            </div>
+            <span className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+              EstoqueFácil
+            </span>
           </div>
-          <span className="font-medium text-sm text-neutral-900">EstoqueFácil</span>
+          <ThemeToggle />
         </div>
 
         <nav className="flex flex-col gap-0.5 px-2.5">
@@ -39,8 +45,8 @@ export default function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm ${
                   isActive
-                    ? 'bg-white font-medium text-neutral-900'
-                    : 'text-neutral-500 hover:bg-white/60'
+                    ? 'bg-white dark:bg-neutral-800 font-medium text-neutral-900 dark:text-neutral-100'
+                    : 'text-neutral-500 dark:text-neutral-400 hover:bg-white/60 dark:hover:bg-neutral-800/60'
                 }`
               }
             >
@@ -53,17 +59,21 @@ export default function Sidebar() {
 
       <div className="px-5">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-medium text-blue-800">
+          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[11px] font-medium text-blue-800 dark:text-blue-200">
             {iniciais}
           </div>
           <div className="leading-tight">
-            <p className="text-xs font-medium text-neutral-900">{usuario?.nome}</p>
-            <p className="text-[11px] text-neutral-400">{usuario?.papel}</p>
+            <p className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
+              {usuario?.nome}
+            </p>
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+              {usuario?.papel}
+            </p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="text-xs text-neutral-500 hover:text-neutral-900"
+          className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
         >
           Sair
         </button>

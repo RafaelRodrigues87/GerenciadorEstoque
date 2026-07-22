@@ -3,6 +3,7 @@ import { RotaPrivada } from '../auth/RotaPrivada'
 import AppLayout from '../components/layout/AppLayout'
 import Login from '../page/Login'
 import Dashboard from '../page/Dashboard'
+import Categorias from '../page/Categorias'
 
 export default function AppRoutes() {
   return (
@@ -17,6 +18,7 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="categorias" element={<Categorias/>}/>
         {/* Próximas rotas entram aqui dentro, conforme as páginas forem criadas:
             <Route path="produtos" element={<Produtos />} />
             <Route path="vendas" element={<Vendas />} />
