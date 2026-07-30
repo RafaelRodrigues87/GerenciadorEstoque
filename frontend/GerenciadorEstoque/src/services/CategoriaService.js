@@ -8,16 +8,16 @@ export const CategoriaService = {
     },
 
     async criar(categoria){
-        const {data} = await api.post('/categorias/criar', categoria)
+        const {data} = await api.post(`categoria/criar`, categoria)
         return data
     },
 
     async atualizar(id, categoria){
-        const { data } = await api.put('/categorias/atualizar/${id}', categoria)
+        const { data } = await api.put(`/categoria/atualizar/${id}`, categoria)
         return data
     },
 
-    async remove(id){
-        await api.delete('/categorias/${id}')
+    async remover(id){
+        await api.delete(`/categoria/${id}`)
     }
 }

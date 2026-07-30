@@ -2,7 +2,7 @@ import api from '../api/client'
 
 export const produtoService = {
     async listarTodos() {
-        const {data} = await api.get('/produto/listar')
+        const {data} = await api.get('/produtos/listar')
         return data
     },
 
@@ -25,13 +25,11 @@ export const produtoService = {
         const {data} = await api.put(`/produtos/atualizar/${id}`, produto)
         return data
     },
-
-    async ajustarEstoque(id, ajuste){
-        const { data } = await api.put(`/produtos/ajusata-estoque/${id}`, ajuste)
-        return data
+    async ajustarEstoque(id, ajuste) {
+    const { data } = await api.patch(`/produtos/ajustar-estoque/${id}`, ajuste)
+    return data
     },
-
-    async iantivar(id){
+    async inativar(id){
         await api.delete(`/produtos/${id}`)
     }
 }

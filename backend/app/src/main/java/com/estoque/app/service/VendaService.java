@@ -1,17 +1,17 @@
 package com.estoque.app.service;
 
-import com.estoque.app.dto.Request.CriarVendaRequest;
-import com.estoque.app.dto.Request.ItemVendaRequest;
-import com.estoque.app.dto.Response.ItemVendaResponse;
-import com.estoque.app.dto.Response.ResumoVendasHojeResponse;
-import com.estoque.app.dto.Response.VendaResponse;
+import com.estoque.app.dto.Response.*;
+import com.estoque.app.dto.Request.*;
 import com.estoque.app.entities.*;
+import com.estoque.app.enums.StatusVenda;
 import com.estoque.app.enums.TipoMovimentacao;
 import com.estoque.app.repository.MovimentacaoEstoqueRepository;
 import com.estoque.app.repository.ProdutoRepository;
 import com.estoque.app.repository.UsuarioRepository;
 import com.estoque.app.repository.VendaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +30,6 @@ public class VendaService {
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
     private final UsuarioRepository usuarioRepository;
 
-    // @Transactional aqui é o ponto-chave: se qualquer produto não tiver estoque
-    // suficiente e a exceção for lançada no meio do loop, TUDO é desfeito —
-    // nenhuma baixa parcial fica registrada, nenhuma venda "pela metade" é salva.
     @Transactional
     public VendaResponse criarVenda(CriarVendaRequest request, String emailUsuarioLogado) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
@@ -63,12 +60,9 @@ public class VendaService {
                 );
             }
 
-            // Baixa no estoque
             produto.setQuantidadeAtual(produto.getQuantidadeAtual() - itemRequest.quantidade());
             produtoRepository.save(produto);
 
-            // Preço é copiado AGORA — se o preço do produto mudar amanhã,
-            // esta venda continua registrada com o valor cobrado de verdade
             BigDecimal precoUnitario = produto.getPrecoVenda();
             BigDecimal subtotal = precoUnitario.multiply(BigDecimal.valueOf(itemRequest.quantidade()));
 
@@ -82,7 +76,6 @@ public class VendaService {
             venda.adicionarItem(itemVenda);
             valorTotal = valorTotal.add(subtotal);
 
-            // Auditoria: toda saída de estoque por venda fica registrada aqui também
             MovimentacaoEstoque movimentacao = MovimentacaoEstoque.builder()
                     .produto(produto)
                     .usuario(usuario)
@@ -99,24 +92,66 @@ public class VendaService {
         return paraResponse(venda);
     }
 
+    // Desfaz uma venda sem apagar o registro: marca como CANCELADA e devolve
+    // o estoque de cada item, gerando movimentação de ENTRADA para auditoria.
+    @Transactional
+    public VendaResponse cancelar(Long vendaId, String emailUsuarioLogado) {
+        Venda venda = vendaRepository.findById(vendaId)
+                .orElseThrow(() -> new IllegalArgumentException("Venda não encontrada"));
+
+        if (venda.getStatus() == StatusVenda.CANCELADA) {
+            throw new IllegalStateException("Esta venda já está cancelada");
+        }
+
+        Usuario usuarioQueCancela = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new IllegalStateException("Usuário logado não encontrado"));
+
+        for (ItemVenda item : venda.getItens()) {
+            Produto produto = item.getProduto();
+            produto.setQuantidadeAtual(produto.getQuantidadeAtual() + item.getQuantidade());
+            produtoRepository.save(produto);
+
+            MovimentacaoEstoque movimentacao = MovimentacaoEstoque.builder()
+                    .produto(produto)
+                    .usuario(usuarioQueCancela)
+                    .tipo(TipoMovimentacao.ENTRADA)
+                    .quantidade(item.getQuantidade())
+                    .motivo("Cancelamento da venda #" + venda.getId())
+                    .build();
+            movimentacaoEstoqueRepository.save(movimentacao);
+        }
+
+        venda.setStatus(StatusVenda.CANCELADA);
+        venda = vendaRepository.save(venda);
+
+        return paraResponse(venda);
+    }
+
     public VendaResponse buscarPorId(Long id) {
         Venda venda = vendaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Venda não encontrada"));
         return paraResponse(venda);
     }
 
-    public List<VendaResponse> listarTodas() {
-        return vendaRepository.findAll()
-                .stream()
-                .map(this::paraResponse)
-                .toList();
+    // Paginado: o front nunca carrega tudo de uma vez, só a "página" pedida.
+    // status é opcional — null retorna todas, informado filtra por CONCLUIDA/CANCELADA.
+    public Page<VendaResponse> listarPaginado(Pageable pageable, StatusVenda status) {
+        Page<Venda> pagina = (status != null)
+                ? vendaRepository.findByStatus(status, pageable)
+                : vendaRepository.findAll(pageable);
+
+        return pagina.map(this::paraResponse);
     }
 
     public ResumoVendasHojeResponse resumoHoje() {
         LocalDateTime inicioDoDia = LocalDate.now().atStartOfDay();
         LocalDateTime fimDoDia = LocalDate.now().atTime(LocalTime.MAX);
 
-        List<Venda> vendasHoje = vendaRepository.findByDataHoraBetween(inicioDoDia, fimDoDia);
+        List<Venda> vendasHoje = vendaRepository.findByDataHoraBetween(inicioDoDia, fimDoDia)
+                .stream()
+                .filter(v -> v.getStatus() == StatusVenda.CONCLUIDA)
+                .toList();
+
         BigDecimal total = vendasHoje.stream()
                 .map(Venda::getValorTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
