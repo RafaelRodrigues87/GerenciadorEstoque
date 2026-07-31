@@ -27,10 +27,18 @@ export function AuthProvider({ children }) {
     setUsuario(null)
   }
 
+  // Usado depois de editar o próprio perfil — atualiza nome/email exibidos
+  // na Sidebar sem precisar deslogar e logar de novo
+  function atualizarUsuarioLocal(dadosAtualizados) {
+    const novoUsuario = { ...usuario, ...dadosAtualizados }
+    localStorage.setItem('usuario', JSON.stringify(novoUsuario))
+    setUsuario(novoUsuario)
+  }
+
   const estaLogado = !!usuario
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, estaLogado }}>
+    <AuthContext.Provider value={{ usuario, login, logout, estaLogado, atualizarUsuarioLocal }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, SlidersHorizontal, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, SlidersHorizontal, Search, Package } from 'lucide-react'
 import { produtoService } from '../services/produtoService'
 import { CategoriaService } from '../services/CategoriaService'
 import ProdutoFormModal from '../components/produtos/ProdutoFormModal'
@@ -20,7 +20,7 @@ export default function Produtos() {
   async function carregar() {
     setCarregando(true)
     const [dadosProdutos, dadosCategorias] = await Promise.all([
-      produtoService.listarTodos(), 
+      produtoService.listarTodos(),
       CategoriaService.listarTodos(),
     ])
     setProdutos(dadosProdutos)
@@ -32,7 +32,6 @@ export default function Produtos() {
     carregar()
   }, [])
 
-  // Filtro por nome, ignorando maiúsculas/minúsculas
   const produtosFiltrados = produtos.filter((produto) =>
     produto.nome.toLowerCase().includes(termoBusca.toLowerCase())
   )
@@ -100,7 +99,7 @@ export default function Produtos() {
         </button>
       </div>
 
-      <div className="relative mb-4 max-w-sm">
+      <div className="relative mb-5 max-w-sm">
         <Search
           size={16}
           className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
@@ -120,94 +119,82 @@ export default function Produtos() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 text-left">
-              <th className="font-medium px-4 py-3">Produto</th>
-              <th className="font-medium px-4 py-3">Categoria</th>
-              <th className="font-medium px-4 py-3 text-right">Preço venda</th>
-              <th className="font-medium px-4 py-3 text-center">Estoque</th>
-              <th className="font-medium px-4 py-3 text-center">Status</th>
-              <th className="font-medium px-4 py-3 w-28 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carregando && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                  Carregando...
-                </td>
-              </tr>
-            )}
+      {carregando && (
+        <p className="text-sm text-neutral-400 text-center py-10">Carregando...</p>
+      )}
 
-            {!carregando && produtosFiltrados.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                  {termoBusca
-                    ? 'Nenhum produto encontrado para essa busca'
-                    : 'Nenhum produto cadastrado ainda'}
-                </td>
-              </tr>
-            )}
+      {!carregando && produtosFiltrados.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
+          <Package size={28} className="mb-2 opacity-50" />
+          <p className="text-sm">
+            {termoBusca ? 'Nenhum produto encontrado para essa busca' : 'Nenhum produto cadastrado ainda'}
+          </p>
+        </div>
+      )}
 
-            {produtosFiltrados.map((produto) => (
-              <tr
-                key={produto.id}
-                className="border-t border-neutral-100 dark:border-neutral-800"
-              >
-                <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
-                  {produto.nome}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {produto.categoriaNome}
-                </td>
-                <td className="px-4 py-3 text-right text-neutral-900 dark:text-neutral-100">
-                  {formatarMoeda(produto.precoVenda)}
-                </td>
-                <td className="px-4 py-3 text-center text-neutral-900 dark:text-neutral-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {produtosFiltrados.map((produto) => (
+          <div
+            key={produto.id}
+            className="group bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-md">
+                {produto.categoriaNome}
+              </span>
+              {produto.estoqueBaixo ? (
+                <span className="text-xs font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950 px-2 py-1 rounded-md">
+                  Baixo
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950 px-2 py-1 rounded-md">
+                  Ok
+                </span>
+              )}
+            </div>
+
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-1 line-clamp-2 min-h-[2.5rem]">
+              {produto.nome}
+            </p>
+
+            <p className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
+              {formatarMoeda(produto.precoVenda)}
+            </p>
+
+            <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                <span className="font-medium text-neutral-700 dark:text-neutral-300">
                   {produto.quantidadeAtual}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {produto.estoqueBaixo ? (
-                    <span className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 text-xs font-medium px-2.5 py-1 rounded-md">
-                      Baixo
-                    </span>
-                  ) : (
-                    <span className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 text-xs font-medium px-2.5 py-1 rounded-md">
-                      Ok
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => setProdutoParaAjustar(produto)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      title="Ajustar estoque"
-                    >
-                      <SlidersHorizontal size={15} />
-                    </button>
-                    <button
-                      onClick={() => abrirParaEditar(produto)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      title="Editar"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleInativar(produto)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-400"
-                      title="Inativar"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </span>{' '}
+                em estoque
+              </div>
+
+              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => setProdutoParaAjustar(produto)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  title="Ajustar estoque"
+                >
+                  <SlidersHorizontal size={14} />
+                </button>
+                <button
+                  onClick={() => abrirParaEditar(produto)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  title="Editar"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => handleInativar(produto)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-400"
+                  title="Inativar"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {modalFormAberto && (

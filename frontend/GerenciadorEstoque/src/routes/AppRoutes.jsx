@@ -7,6 +7,8 @@ import Categorias from '../page/Categorias'
 import Produtos from '../page/Produtos'
 import Vendas from '../page/Vendas'
 import Movimentacoes from '../page/Movimentacoes'
+import Usuarios from '../page/Usuarios'
+import MeuPerfil from '../page/MeuPerfil'
 
 export default function AppRoutes() {
   return (
@@ -25,6 +27,8 @@ export default function AppRoutes() {
         <Route path="produtos" element={<Produtos/>}/>
         <Route path="vendas" element={<Vendas/>}/>
         <Route path="Movimentacoes" element={<Movimentacoes/>}/>
+         <Route path="usuarios" element={<Usuarios />} />
+        <Route path="meuPerfil" element={<MeuPerfil />} />
         {/* Próximas rotas entram aqui dentro, conforme as páginas forem criadas:
             <Route path="produtos" element={<Produtos />} />
             <Route path="vendas" element={<Vendas />} />

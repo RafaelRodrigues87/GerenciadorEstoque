@@ -1,18 +1,20 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingCart, Tag, History } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Tag, History, Users } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import ThemeToggle from './ThemeToggle'
 
-const itensMenu = [
-  { rota: '/', rotulo: 'Painel', Icone: LayoutDashboard },
-  { rota: '/produtos', rotulo: 'Produtos', Icone: Package },
-  { rota: '/vendas', rotulo: 'Vendas', Icone: ShoppingCart },
-  { rota: '/categorias', rotulo: 'Categorias', Icone: Tag },
-  { rota: '/movimentacoes', rotulo: 'Movimentações', Icone: History },
-]
-
 export default function Sidebar() {
   const { usuario, logout } = useAuth()
+  const ehAdmin = usuario?.papel === 'ADMIN'
+
+  const itensMenu = [
+    { rota: '/', rotulo: 'Painel', Icone: LayoutDashboard },
+    { rota: '/produtos', rotulo: 'Produtos', Icone: Package },
+    { rota: '/vendas', rotulo: 'Vendas', Icone: ShoppingCart },
+    { rota: '/categorias', rotulo: 'Categorias', Icone: Tag },
+    { rota: '/movimentacoes', rotulo: 'Movimentações', Icone: History },
+    ...(ehAdmin ? [{ rota: '/usuarios', rotulo: 'Usuários', Icone: Users }] : []),
+  ]
 
   const iniciais = usuario?.nome
     ?.split(' ')
@@ -57,23 +59,32 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div className="px-5">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[11px] font-medium text-blue-800 dark:text-blue-200">
+      <div className="px-2.5">
+        <NavLink
+          to="/meuPerfil"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-2.5 py-2 rounded-lg mb-1 ${
+              isActive
+                ? 'bg-white dark:bg-neutral-800'
+                : 'hover:bg-white/60 dark:hover:bg-neutral-800/60'
+            }`
+          }
+        >
+          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[11px] font-medium text-blue-800 dark:text-blue-200 shrink-0">
             {iniciais}
           </div>
-          <div className="leading-tight">
-            <p className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
+          <div className="leading-tight overflow-hidden">
+            <p className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate">
               {usuario?.nome}
             </p>
             <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               {usuario?.papel}
             </p>
           </div>
-        </div>
+        </NavLink>
         <button
           onClick={logout}
-          className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+          className="w-full text-left text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 px-2.5 py-1"
         >
           Sair
         </button>
