@@ -17,7 +17,7 @@ export const usuarioService = {
   },
 
   async inativar(id) {
-    await api.delete(`/usuarios/${id}`)
+    await api.patch(`/usuarios/inativar/${id}`)
   },
 
   async reativar(id) {

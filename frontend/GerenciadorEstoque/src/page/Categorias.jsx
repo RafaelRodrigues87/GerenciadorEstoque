@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Tag } from 'lucide-react'
 import { CategoriaService } from '../services/categoriaService'
 import CategoriaFormModal from '../components/categorias/CategoriaFormModal'
 
@@ -83,65 +83,54 @@ export default function Categorias() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 text-left">
-              <th className="font-medium px-4 py-3">Nome</th>
-              <th className="font-medium px-4 py-3">Descrição</th>
-              <th className="font-medium px-4 py-3 w-24 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carregando && (
-              <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-neutral-400">
-                  Carregando...
-                </td>
-              </tr>
-            )}
+      {carregando && (
+        <p className="text-sm text-neutral-400 text-center py-10">Carregando...</p>
+      )}
 
-            {!carregando && categorias.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-neutral-400">
-                  Nenhuma categoria cadastrada ainda
-                </td>
-              </tr>
-            )}
+      {!carregando && categorias.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
+          <Tag size={28} className="mb-2 opacity-50" />
+          <p className="text-sm">Nenhuma categoria cadastrada ainda</p>
+        </div>
+      )}
 
-            {categorias.map((categoria) => (
-              <tr
-                key={categoria.id}
-                className="border-t border-neutral-100 dark:border-neutral-800"
-              >
-                <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
-                  {categoria.nome}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {categoria.descricao || '—'}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => abrirParaEditar(categoria)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      title="Editar"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleRemover(categoria)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-400"
-                      title="Remover"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {categorias.map((categoria) => (
+          <div
+            key={categoria.id}
+            className="group bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-9 h-9 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                <Tag size={16} className="text-neutral-600 dark:text-neutral-400" />
+              </div>
+
+              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => abrirParaEditar(categoria)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  title="Editar"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => handleRemover(categoria)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-400"
+                  title="Remover"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-1">
+              {categoria.nome}
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
+              {categoria.descricao || 'Sem descrição'}
+            </p>
+          </div>
+        ))}
       </div>
 
       {modalAberto && (

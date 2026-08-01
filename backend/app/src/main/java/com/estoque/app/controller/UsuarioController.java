@@ -32,10 +32,17 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/inativar/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> inativar(@PathVariable Long id) {
         usuarioService.inativar(id);
         return ResponseEntity.noContent().build();
     }
+    @PatchMapping("/reativar/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> reativar(@PathVariable Long id){
+        usuarioService.reativar(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

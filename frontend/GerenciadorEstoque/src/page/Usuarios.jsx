@@ -1,8 +1,29 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, UserX, UserCheck } from 'lucide-react'
+import { Plus, Pencil, UserX, UserCheck, Users } from 'lucide-react'
 import { usuarioService } from '../services/usuarioService'
 import { useAuth } from '../auth/AuthContext'
 import UsuarioFormModal from '../components/usuarios/UsuarioFormModal'
+
+const coresAvatar = [
+  'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
+  'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200',
+  'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200',
+  'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200',
+  'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200',
+]
+
+function obterIniciais(nome) {
+  return nome
+    ?.split(' ')
+    .slice(0, 2)
+    .map((parte) => parte[0])
+    .join('')
+    .toUpperCase()
+}
+
+function obterCorAvatar(id) {
+  return coresAvatar[id % coresAvatar.length]
+}
 
 export default function Usuarios() {
   const { usuario } = useAuth()
@@ -31,8 +52,8 @@ export default function Usuarios() {
     setModalAberto(true)
   }
 
-  function abrirParaEditar(usuario) {
-    setUsuarioEmEdicao(usuario)
+  function abrirParaEditar(usuarioAlvo) {
+    setUsuarioEmEdicao(usuarioAlvo)
     setErroGeral('')
     setModalAberto(true)
   }
@@ -47,12 +68,12 @@ export default function Usuarios() {
     await carregar()
   }
 
-  async function handleAlternarStatus(usuario) {
+  async function handleAlternarStatus(usuarioAlvo) {
     try {
-      if (usuario.ativo) {
-        await usuarioService.inativar(usuario.id)
+      if (usuarioAlvo.ativo) {
+        await usuarioService.inativar(usuarioAlvo.id)
       } else {
-        await usuarioService.reativar(usuario.id)
+        await usuarioService.reativar(usuarioAlvo.id)
       }
       await carregar()
     } catch (err) {
@@ -96,74 +117,76 @@ export default function Usuarios() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 text-left">
-              <th className="font-medium px-4 py-3">Nome</th>
-              <th className="font-medium px-4 py-3">E-mail</th>
-              <th className="font-medium px-4 py-3 text-center">Papel</th>
-              <th className="font-medium px-4 py-3 text-center">Status</th>
-              <th className="font-medium px-4 py-3 w-24 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carregando && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
-                  Carregando...
-                </td>
-              </tr>
-            )}
+      {carregando && (
+        <p className="text-sm text-neutral-400 text-center py-10">Carregando...</p>
+      )}
 
-            {!carregando && usuarios.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
-                  Nenhum usuário cadastrado
-                </td>
-              </tr>
-            )}
+      {!carregando && usuarios.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
+          <Users size={28} className="mb-2 opacity-50" />
+          <p className="text-sm">Nenhum usuário cadastrado</p>
+        </div>
+      )}
 
-            {usuarios.map((usuario) => (
-              <tr key={usuario.id} className="border-t border-neutral-100 dark:border-neutral-800">
-                <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">{usuario.nome}</td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{usuario.email}</td>
-                <td className="px-4 py-3 text-center text-neutral-500 dark:text-neutral-400">
-                  {rotulosPapel[usuario.papel]}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {usuario.ativo ? (
-                    <span className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 text-xs font-medium px-2.5 py-1 rounded-md">
-                      Ativo
-                    </span>
-                  ) : (
-                    <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs font-medium px-2.5 py-1 rounded-md">
-                      Inativo
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => abrirParaEditar(usuario)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      title="Editar"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleAlternarStatus(usuario)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      title={usuario.ativo ? 'Inativar' : 'Reativar'}
-                    >
-                      {usuario.ativo ? <UserX size={15} /> : <UserCheck size={15} />}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {usuarios.map((usuarioItem) => (
+          <div
+            key={usuarioItem.id}
+            className={`group bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm transition-all ${
+              !usuarioItem.ativo ? 'opacity-60' : ''
+            }`}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium shrink-0 ${obterCorAvatar(usuarioItem.id)}`}
+                >
+                  {obterIniciais(usuarioItem.nome)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                    {usuarioItem.nome}
+                  </p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                    {usuarioItem.email}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <button
+                  onClick={() => abrirParaEditar(usuarioItem)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  title="Editar"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => handleAlternarStatus(usuarioItem)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  title={usuarioItem.ativo ? 'Inativar' : 'Reativar'}
+                >
+                  {usuarioItem.ativo ? <UserX size={14} /> : <UserCheck size={14} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+              <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-md">
+                {rotulosPapel[usuarioItem.papel]}
+              </span>
+              {usuarioItem.ativo ? (
+                <span className="text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950 px-2 py-1 rounded-md">
+                  Ativo
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-md">
+                  Inativo
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
       {modalAberto && (

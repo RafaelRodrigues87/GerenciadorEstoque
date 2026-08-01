@@ -233,6 +233,7 @@ export default function Dashboard() {
                   </Pie>
 
                   <Tooltip
+                    cursor={false}
                     formatter={(valor) => formatarMoeda(valor)}
                     contentStyle={{
                       backgroundColor: '#171717',

@@ -24,7 +24,6 @@ public class ProdutoController {
     private final ProdutoService produtoService;
 
     @PostMapping("/criar")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(produtoService.criar(request));
     }
@@ -45,7 +44,6 @@ public class ProdutoController {
     }
 
     @PutMapping("/atualizar/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProdutoResponse> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody AtualizarProdutoRequest request
@@ -64,7 +62,6 @@ public class ProdutoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> inativar(@PathVariable Long id) {
         produtoService.inativar(id);
         return ResponseEntity.noContent().build();

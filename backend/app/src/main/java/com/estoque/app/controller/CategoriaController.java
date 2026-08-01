@@ -20,7 +20,6 @@ public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @PostMapping("/criar")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> criar(@Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.criar(request));
     }
@@ -31,7 +30,6 @@ public class CategoriaController {
     }
 
     @PutMapping("/atualizar/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody CategoriaRequest request
@@ -40,7 +38,6 @@ public class CategoriaController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> remover(@PathVariable Long id) {
         categoriaService.remover(id);
         return ResponseEntity.noContent().build();

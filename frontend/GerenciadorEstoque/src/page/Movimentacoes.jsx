@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, ArrowUpCircle, ArrowDownCircle, SlidersHorizontal, History } from 'lucide-react'
 import { movimentacaoService } from '../services/MovimentacaoService'
 
 const rotulosTipo = {
@@ -8,10 +8,22 @@ const rotulosTipo = {
   AJUSTE: 'Ajuste',
 }
 
-const coresTipo = {
-  ENTRADA: 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400',
-  SAIDA: 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400',
-  AJUSTE: 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400',
+const iconesTipo = {
+  ENTRADA: ArrowUpCircle,
+  SAIDA: ArrowDownCircle,
+  AJUSTE: SlidersHorizontal,
+}
+
+const coresIconeTipo = {
+  ENTRADA: 'bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400',
+  SAIDA: 'bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400',
+  AJUSTE: 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400',
+}
+
+const sinalQuantidade = {
+  ENTRADA: '+',
+  SAIDA: '−',
+  AJUSTE: '',
 }
 
 export default function Movimentacoes() {
@@ -24,7 +36,6 @@ export default function Movimentacoes() {
     async function carregar() {
       setCarregando(true)
       const dados = await movimentacaoService.listarTodas()
-      // Mais recentes primeiro
       setMovimentacoes([...dados].sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora)))
       setCarregando(false)
     }
@@ -51,7 +62,7 @@ export default function Movimentacoes() {
         </p>
       </div>
 
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 mb-5">
         <div className="relative flex-1 max-w-sm">
           <Search
             size={16}
@@ -78,68 +89,63 @@ export default function Movimentacoes() {
         </select>
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 text-left">
-              <th className="font-medium px-4 py-3">Data</th>
-              <th className="font-medium px-4 py-3">Produto</th>
-              <th className="font-medium px-4 py-3 text-center">Tipo</th>
-              <th className="font-medium px-4 py-3 text-center">Quantidade</th>
-              <th className="font-medium px-4 py-3">Motivo</th>
-              <th className="font-medium px-4 py-3">Responsável</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carregando && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                  Carregando...
-                </td>
-              </tr>
-            )}
+      {carregando && (
+        <p className="text-sm text-neutral-400 text-center py-10">Carregando...</p>
+      )}
 
-            {!carregando && movimentacoesFiltradas.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                  {termoBusca || filtroTipo !== 'TODOS'
-                    ? 'Nenhuma movimentação encontrada para esse filtro'
-                    : 'Nenhuma movimentação registrada ainda'}
-                </td>
-              </tr>
-            )}
+      {!carregando && movimentacoesFiltradas.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
+          <History size={28} className="mb-2 opacity-50" />
+          <p className="text-sm">
+            {termoBusca || filtroTipo !== 'TODOS'
+              ? 'Nenhuma movimentação encontrada para esse filtro'
+              : 'Nenhuma movimentação registrada ainda'}
+          </p>
+        </div>
+      )}
 
-            {movimentacoesFiltradas.map((movimentacao) => (
-              <tr
-                key={movimentacao.id}
-                className="border-t border-neutral-100 dark:border-neutral-800"
+      <div className="flex flex-col gap-2.5">
+        {movimentacoesFiltradas.map((movimentacao) => {
+          const Icone = iconesTipo[movimentacao.tipo]
+
+          return (
+            <div
+              key={movimentacao.id}
+              className="flex items-center gap-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3.5 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm transition-all"
+            >
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${coresIconeTipo[movimentacao.tipo]}`}
               >
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
+                <Icone size={17} />
+              </div>
+
+              <div className="w-32 shrink-0">
+                <p className="text-sm text-neutral-900 dark:text-neutral-100">
                   {formatarData(movimentacao.dataHora)}
-                </td>
-                <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
+                </p>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate">
                   {movimentacao.produtoNome}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span
-                    className={`text-xs font-medium px-2.5 py-1 rounded-md ${coresTipo[movimentacao.tipo]}`}
-                  >
-                    {rotulosTipo[movimentacao.tipo]}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center text-neutral-900 dark:text-neutral-100">
-                  {movimentacao.quantidade}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {movimentacao.motivo || '—'}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {movimentacao.usuarioNome}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </p>
+                <p className="text-xs text-neutral-400 truncate">
+                  {movimentacao.motivo || rotulosTipo[movimentacao.tipo]} · {movimentacao.usuarioNome}
+                </p>
+              </div>
+
+              <span
+                className={`text-xs font-medium px-2.5 py-1 rounded-md shrink-0 ${coresIconeTipo[movimentacao.tipo]}`}
+              >
+                {rotulosTipo[movimentacao.tipo]}
+              </span>
+
+              <p className="text-base font-medium text-neutral-900 dark:text-neutral-100 w-16 text-right shrink-0">
+                {sinalQuantidade[movimentacao.tipo]}{movimentacao.quantidade}
+              </p>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

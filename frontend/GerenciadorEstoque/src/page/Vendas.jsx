@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Plus, Eye, Ban } from 'lucide-react'
+import {
+  Plus, Eye, Ban, CheckCircle2, XCircle, ShoppingBag,
+  Banknote, QrCode, CreditCard,
+} from 'lucide-react'
 import { vendaService } from '../services/VendaService'
 import { produtoService } from '../services/produtoService'
 import { useAuth } from '../auth/AuthContext'
@@ -14,6 +17,13 @@ const rotulosFormaPagamento = {
   CARTAO_DEBITO: 'Cartão de débito',
 }
 
+const iconesFormaPagamento = {
+  DINHEIRO: Banknote,
+  PIX: QrCode,
+  CARTAO_CREDITO: CreditCard,
+  CARTAO_DEBITO: CreditCard,
+}
+
 const TAMANHO_PAGINA = 20
 
 export default function Vendas() {
@@ -25,7 +35,7 @@ export default function Vendas() {
   const [carregando, setCarregando] = useState(true)
   const [erroGeral, setErroGeral] = useState('')
 
-  const [filtroStatus, setFiltroStatus] = useState('') // '' = todas
+  const [filtroStatus, setFiltroStatus] = useState('')
   const [paginaAtual, setPaginaAtual] = useState(0)
   const [totalPaginas, setTotalPaginas] = useState(0)
 
@@ -52,8 +62,6 @@ export default function Vendas() {
     produtoService.listarTodos().then(setProdutos)
   }, [])
 
-  // Sempre que o filtro muda, volta pra primeira página — senão o usuário
-  // pode ficar "preso" numa página que não existe mais no resultado filtrado
   function handleMudarFiltro(novoStatus) {
     setFiltroStatus(novoStatus)
     setPaginaAtual(0)
@@ -91,6 +99,10 @@ export default function Vendas() {
   const formatarData = (data) =>
     new Date(data).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 
+  // Resumo rápido da página atual — só das vendas concluídas visíveis agora
+  const vendasConcluidasNaPagina = vendas.filter((v) => v.status === 'CONCLUIDA')
+  const totalNaPagina = vendasConcluidasNaPagina.reduce((soma, v) => soma + v.valorTotal, 0)
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -111,7 +123,7 @@ export default function Vendas() {
         </button>
       </div>
 
-      <div className="mb-4">
+      <div className="flex items-center justify-between mb-5">
         <select
           value={filtroStatus}
           onChange={(e) => handleMudarFiltro(e.target.value)}
@@ -121,6 +133,15 @@ export default function Vendas() {
           <option value="CONCLUIDA">Concluídas</option>
           <option value="CANCELADA">Canceladas</option>
         </select>
+
+        {!carregando && vendas.length > 0 && (
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            {vendasConcluidasNaPagina.length} {vendasConcluidasNaPagina.length === 1 ? 'venda' : 'vendas'} nesta página ·{' '}
+            <span className="font-medium text-neutral-900 dark:text-neutral-100">
+              {formatarMoeda(totalNaPagina)}
+            </span>
+          </p>
+        )}
       </div>
 
       {erroGeral && (
@@ -129,91 +150,113 @@ export default function Vendas() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 text-left">
-              <th className="font-medium px-4 py-3">Data</th>
-              <th className="font-medium px-4 py-3">Vendedor</th>
-              <th className="font-medium px-4 py-3">Pagamento</th>
-              <th className="font-medium px-4 py-3 text-right">Total</th>
-              <th className="font-medium px-4 py-3 text-center">Status</th>
-              <th className="font-medium px-4 py-3 w-24 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carregando && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                  Carregando...
-                </td>
-              </tr>
-            )}
+      {carregando && (
+        <p className="text-sm text-neutral-400 text-center py-10">Carregando...</p>
+      )}
 
-            {!carregando && vendas.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                  Nenhuma venda encontrada
-                </td>
-              </tr>
-            )}
+      {!carregando && vendas.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
+          <ShoppingBag size={28} className="mb-2 opacity-50" />
+          <p className="text-sm">Nenhuma venda encontrada</p>
+        </div>
+      )}
 
-            {vendas.map((venda) => (
-              <tr key={venda.id} className="border-t border-neutral-100 dark:border-neutral-800">
-                <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
+      <div className="flex flex-col gap-2.5 mb-4">
+        {vendas.map((venda) => {
+          const cancelada = venda.status === 'CANCELADA'
+          const IconePagamento = iconesFormaPagamento[venda.formaPagamento]
+
+          return (
+            <div
+              key={venda.id}
+              className={`group flex items-center gap-4 bg-white dark:bg-neutral-900 border rounded-xl px-4 py-3.5 hover:shadow-sm transition-all ${
+                cancelada
+                  ? 'border-neutral-200 dark:border-neutral-800 opacity-70'
+                  : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
+              }`}
+            >
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                  cancelada
+                    ? 'bg-red-50 dark:bg-red-950'
+                    : 'bg-green-50 dark:bg-green-950'
+                }`}
+              >
+                {cancelada ? (
+                  <XCircle size={17} className="text-red-500 dark:text-red-400" />
+                ) : (
+                  <CheckCircle2 size={17} className="text-green-600 dark:text-green-400" />
+                )}
+              </div>
+
+              <div className="w-32 shrink-0">
+                <p className="text-sm text-neutral-900 dark:text-neutral-100">
                   {formatarData(venda.dataHora)}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {venda.usuarioNome}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {rotulosFormaPagamento[venda.formaPagamento]}
-                </td>
-                <td className="px-4 py-3 text-right text-neutral-900 dark:text-neutral-100">
-                  {formatarMoeda(venda.valorTotal)}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {venda.status === 'CANCELADA' ? (
-                    <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs font-medium px-2.5 py-1 rounded-md">
-                      Cancelada
-                    </span>
-                  ) : (
-                    <span className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 text-xs font-medium px-2.5 py-1 rounded-md">
-                      Concluída
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => abrirDetalhes(venda)}
-                      className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                      title="Ver detalhes"
-                    >
-                      <Eye size={15} />
-                    </button>
-                    {ehAdmin && venda.status === 'CONCLUIDA' && (
-                      <button
-                        onClick={() => handleCancelar(venda)}
-                        className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-400"
-                        title="Cancelar venda"
-                      >
-                        <Ban size={15} />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </p>
+              </div>
 
-        <Pagination
-          paginaAtual={paginaAtual}
-          totalPaginas={totalPaginas}
-          onMudarPagina={setPaginaAtual}
-        />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate">
+                  {venda.usuarioNome}
+                </p>
+                <div className="flex items-center gap-1 text-xs text-neutral-400">
+                  <IconePagamento size={12} />
+                  {rotulosFormaPagamento[venda.formaPagamento]}
+                </div>
+              </div>
+
+             <span
+                  className={`text-xs font-medium px-2.5 py-1 rounded-md shrink-0 w-24 text-center ${
+                    cancelada
+                      ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950'
+                      : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950'
+                  }`}
+                >
+                  {cancelada ? 'Cancelada' : 'Concluída'}
+                </span>
+
+              <p
+                className={`text-base font-medium w-28 text-right shrink-0 ${
+                  cancelada
+                    ? 'text-neutral-400 dark:text-neutral-500 line-through'
+                    : 'text-neutral-900 dark:text-neutral-100'
+                }`}
+              >
+                {formatarMoeda(venda.valorTotal)}
+              </p>
+
+              <div className="w-16 flex justify-end gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => abrirDetalhes(venda)}
+                  className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  title="Ver detalhes"
+                >
+                  <Eye size={15} />
+                </button>
+                {ehAdmin && !cancelada && (
+                  <button
+                    onClick={() => handleCancelar(venda)}
+                    className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-400"
+                    title="Cancelar venda"
+                  >
+                    <Ban size={15} />
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <Pagination
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            onMudarPagina={setPaginaAtual}
+          />
+        </div>
+      )}
 
       {modalNovaVendaAberto && (
         <NovaVendaModal
