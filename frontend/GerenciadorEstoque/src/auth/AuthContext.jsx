@@ -9,36 +9,60 @@ export function AuthProvider({ children }) {
     return salvo ? JSON.parse(salvo) : null
   })
 
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem('token')
+  })
+
   async function login(email, senha) {
     const resposta = await authService.login(email, senha)
 
     localStorage.setItem('token', resposta.token)
-    localStorage.setItem('usuario', JSON.stringify({
+    localStorage.setItem(
+      'usuario',
+      JSON.stringify({
+        nome: resposta.nome,
+        email: resposta.email,
+        papel: resposta.papel,
+      })
+    )
+
+    setToken(resposta.token)
+    setUsuario({
       nome: resposta.nome,
       email: resposta.email,
       papel: resposta.papel,
-    }))
-    setUsuario({ nome: resposta.nome, email: resposta.email, papel: resposta.papel })
+    })
   }
 
   function logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('usuario')
+
+    setToken(null)
     setUsuario(null)
   }
 
-  // Usado depois de editar o próprio perfil — atualiza nome/email exibidos
-  // na Sidebar sem precisar deslogar e logar de novo
+  // Atualiza os dados do usuário após editar o perfil
   function atualizarUsuarioLocal(dadosAtualizados) {
     const novoUsuario = { ...usuario, ...dadosAtualizados }
+
     localStorage.setItem('usuario', JSON.stringify(novoUsuario))
     setUsuario(novoUsuario)
   }
 
-  const estaLogado = !!usuario
+  const estaLogado = !!token && !!usuario
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, estaLogado, atualizarUsuarioLocal }}>
+    <AuthContext.Provider
+      value={{
+        usuario,
+        token,
+        login,
+        logout,
+        estaLogado,
+        atualizarUsuarioLocal,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -46,8 +70,10 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
+
   if (!context) {
     throw new Error('useAuth precisa ser usado dentro de um AuthProvider')
   }
+
   return context
 }

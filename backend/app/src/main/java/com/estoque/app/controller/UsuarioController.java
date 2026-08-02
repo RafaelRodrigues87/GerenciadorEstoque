@@ -1,5 +1,6 @@
 package com.estoque.app.controller;
 
+import com.estoque.app.dto.Request.AtualizarUsuarioRequest;
 import com.estoque.app.dto.Request.CriarUsuarioRequest;
 import com.estoque.app.dto.Response.UsuarioResponse;
 import com.estoque.app.service.UsuarioService;
@@ -30,6 +31,13 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listarTodos() {
         return ResponseEntity.ok(usuarioService.listarTodos());
+    }
+
+    @PatchMapping("/atualizar/funcionario/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Void>AtualizarFuncionario(@PathVariable Long id, @Valid @RequestBody AtualizarUsuarioRequest request){
+        usuarioService.atualizar(id, request);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/inativar/{id}")

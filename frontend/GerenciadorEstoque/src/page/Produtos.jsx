@@ -32,9 +32,9 @@ export default function Produtos() {
     carregar()
   }, [])
 
-  const produtosFiltrados = produtos.filter((produto) =>
-    produto.nome.toLowerCase().includes(termoBusca.toLowerCase())
-  )
+ const produtosFiltrados = produtos.filter(
+  (produto) => produto.ativo && produto.nome.toLowerCase().includes(termoBusca.toLowerCase())
+)
 
   function abrirParaCriar() {
     setProdutoEmEdicao(null)

@@ -12,7 +12,7 @@ export const usuarioService = {
   },
 
   async atualizar(id, usuario) {
-    const { data } = await api.put(`/usuarios/atualizar/${id}`, usuario)
+    const { data } = await api.patch(`/usuarios/atualizar/funcionario/${id}`, usuario)
     return data
   },
 

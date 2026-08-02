@@ -37,7 +37,7 @@ public class UsuarioService {
     }
 
     public List<UsuarioResponse> listarTodos() {
-        return usuarioRepository.findAll()
+        return usuarioRepository.findByEmailNot("admin@loja.com")
                 .stream()
                 .map(this::paraResponse)
                 .toList();
@@ -118,7 +118,9 @@ public class UsuarioService {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getPapel().name(),
-                usuario.isAtivo()
+                usuario.isAtivo(),
+                usuario.getCriadoEm()
         );
+
     }
 }

@@ -1,10 +1,15 @@
-import { useState } from 'react'
-import { User, Lock, Check } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { User, Lock, Check, Settings, ShieldAlert, Mail, Monitor, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
+import { useTheme } from '../theme/ThemeContext'
 import { usuarioService } from '../services/usuarioService'
+import ConfirmModal from '../components/common/ConfirmModal'
 
 export default function MeuPerfil() {
   const { usuario, atualizarUsuarioLocal } = useAuth()
+  const { tema, alternarTema } = useTheme()
+
+  const [criadoEm, setCriadoEm] = useState(null)
 
   const [nome, setNome] = useState(usuario?.nome ?? '')
   const [email, setEmail] = useState(usuario?.email ?? '')
@@ -18,6 +23,14 @@ export default function MeuPerfil() {
   const [erroSenha, setErroSenha] = useState('')
   const [sucessoSenha, setSucessoSenha] = useState(false)
   const [salvandoSenha, setSalvandoSenha] = useState(false)
+  const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false)
+
+  const [notificacoesPorEmail, setNotificacoesPorEmail] = useState(true)
+
+  // Busca o perfil completo (o AuthContext só guarda nome/email/papel, não criadoEm)
+  useEffect(() => {
+    usuarioService.buscarMeuPerfil().then((dados) => setCriadoEm(dados.criadoEm))
+  }, [])
 
   const iniciais = usuario?.nome
     ?.split(' ')
@@ -27,6 +40,11 @@ export default function MeuPerfil() {
     .toUpperCase()
 
   const rotulosPapel = { ADMIN: 'Administrador', OPERADOR: 'Operador' }
+
+  const formatarMembroDesde = (data) => {
+    if (!data) return null
+    return new Date(data).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  }
 
   async function handleSalvarPerfil(e) {
     e.preventDefault()
@@ -46,25 +64,32 @@ export default function MeuPerfil() {
     }
   }
 
-  async function handleAlterarSenha(e) {
+  function handleSubmitSenha(e) {
     e.preventDefault()
     setErroSenha('')
-    setSucessoSenha(false)
 
     if (novaSenha !== confirmarNovaSenha) {
       setErroSenha('As senhas novas não coincidem')
       return
     }
 
+    setModalConfirmacaoAberto(true)
+  }
+
+  async function confirmarTrocaSenha() {
+    setErroSenha('')
     setSalvandoSenha(true)
+
     try {
       await usuarioService.alterarSenha({ senhaAtual, novaSenha })
+      setModalConfirmacaoAberto(false)
       setSucessoSenha(true)
       setSenhaAtual('')
       setNovaSenha('')
       setConfirmarNovaSenha('')
       setTimeout(() => setSucessoSenha(false), 3000)
     } catch (err) {
+      setModalConfirmacaoAberto(false)
       setErroSenha(err.response?.data?.mensagem ?? 'Não foi possível alterar a senha')
     } finally {
       setSalvandoSenha(false)
@@ -86,17 +111,26 @@ export default function MeuPerfil() {
           <h1 className="text-xl font-medium text-neutral-900 dark:text-neutral-100">
             {usuario?.nome}
           </h1>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-sm text-neutral-500 dark:text-neutral-400">{usuario?.email}</span>
             <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
             <span className="text-xs font-medium bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-md">
               {rotulosPapel[usuario?.papel]}
             </span>
+            {criadoEm && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                <span className="text-xs text-neutral-400">
+                  Membro desde {formatarMembroDesde(criadoEm)}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid md:grid-cols-2 gap-5 mb-5">
+        {/* Dados pessoais */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-5">
             <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
@@ -151,6 +185,7 @@ export default function MeuPerfil() {
           </form>
         </div>
 
+        {/* Trocar senha */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-5">
             <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
@@ -168,7 +203,7 @@ export default function MeuPerfil() {
             </div>
           )}
 
-          <form onSubmit={handleAlterarSenha}>
+          <form onSubmit={handleSubmitSenha}>
             <label className={classeLabel}>Senha atual</label>
             <input
               type="password"
@@ -200,15 +235,12 @@ export default function MeuPerfil() {
 
             <button
               type="submit"
-              disabled={salvandoSenha}
               className="flex items-center justify-center gap-1.5 w-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium py-2.5 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-50"
             >
               {sucessoSenha ? (
                 <>
                   <Check size={15} /> Senha alterada
                 </>
-              ) : salvandoSenha ? (
-                'Salvando...'
               ) : (
                 'Alterar senha'
               )}
@@ -216,6 +248,122 @@ export default function MeuPerfil() {
           </form>
         </div>
       </div>
+
+      {/* Preferências */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 mb-5">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <Settings size={15} className="text-neutral-600 dark:text-neutral-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Preferências</p>
+            <p className="text-xs text-neutral-400">Como o sistema se comporta pra você</p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800">
+          <div>
+            <p className="text-sm text-neutral-900 dark:text-neutral-100">Modo escuro</p>
+            <p className="text-xs text-neutral-400">Alterna o tema claro/escuro do sistema</p>
+          </div>
+          <button
+            onClick={alternarTema}
+            className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
+              tema === 'escuro' ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-neutral-200'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white dark:bg-neutral-900 transition-transform ${
+                tema === 'escuro' ? 'translate-x-5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800">
+          <div className="flex items-start gap-2.5">
+            <Mail size={16} className="text-neutral-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-neutral-900 dark:text-neutral-100">
+                Notificações por e-mail
+              </p>
+              <p className="text-xs text-neutral-400">
+                Avisos de estoque baixo e resumo diário — em breve
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setNotificacoesPorEmail((atual) => !atual)}
+            disabled
+            title="Ainda não implementado"
+            className={`w-11 h-6 rounded-full transition-colors relative shrink-0 opacity-40 cursor-not-allowed ${
+              notificacoesPorEmail ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-neutral-200'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white dark:bg-neutral-900 transition-transform ${
+                notificacoesPorEmail ? 'translate-x-5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800">
+          <div className="flex items-start gap-2.5">
+            <Monitor size={16} className="text-neutral-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-neutral-900 dark:text-neutral-100">Sessões ativas</p>
+              <p className="text-xs text-neutral-400">Sair de todos os dispositivos conectados</p>
+            </div>
+          </div>
+          <button
+            disabled
+            title="Ainda não implementado"
+            className="text-sm font-medium px-3.5 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 text-neutral-400 dark:text-neutral-600 cursor-not-allowed"
+          >
+            Encerrar sessões
+          </button>
+        </div>
+      </div>
+
+      {/* Zona de perigo */}
+      <div className="bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-900 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950 flex items-center justify-center">
+            <ShieldAlert size={15} className="text-red-600 dark:text-red-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Zona de perigo</p>
+            <p className="text-xs text-neutral-400">Ações permanentes na sua conta</p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-neutral-900 dark:text-neutral-100">Excluir minha conta</p>
+            <p className="text-xs text-neutral-400">Essa ação não pode ser desfeita — em breve</p>
+          </div>
+          <button
+            disabled
+            title="Ainda não implementado"
+            className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-lg border border-red-200 dark:border-red-900 text-red-300 dark:text-red-800 cursor-not-allowed"
+          >
+            <Trash2 size={14} />
+            Excluir conta
+          </button>
+        </div>
+      </div>
+
+      {modalConfirmacaoAberto && (
+        <ConfirmModal
+          titulo="Trocar senha?"
+          mensagem="Você vai precisar da nova senha no próximo login. Confirma a troca?"
+          textoConfirmar="Sim, trocar senha"
+          confirmando={salvandoSenha}
+          onConfirmar={confirmarTrocaSenha}
+          onFechar={() => setModalConfirmacaoAberto(false)}
+        />
+      )}
     </div>
   )
 }

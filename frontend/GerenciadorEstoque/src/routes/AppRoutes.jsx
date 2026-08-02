@@ -23,17 +23,21 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="categorias" element={<Categorias/>}/>
-        <Route path="produtos" element={<Produtos/>}/>
-        <Route path="vendas" element={<Vendas/>}/>
-        <Route path="Movimentacoes" element={<Movimentacoes/>}/>
-         <Route path="usuarios" element={<Usuarios />} />
+        <Route path="categorias" element={<Categorias />} />
+        <Route path="produtos" element={<Produtos />} />
+        <Route path="vendas" element={<Vendas />} />
+        <Route path="movimentacoes" element={<Movimentacoes />} />
+
+        //rota que expoe as contas dos funcionarios
+        <Route
+          path="usuarios"
+          element={
+            <RotaPrivada permissoes={['ADMIN']}>
+              <Usuarios />
+            </RotaPrivada>
+          }
+        />
         <Route path="meuPerfil" element={<MeuPerfil />} />
-        {/* Próximas rotas entram aqui dentro, conforme as páginas forem criadas:
-            <Route path="produtos" element={<Produtos />} />
-            <Route path="vendas" element={<Vendas />} />
-            <Route path="categorias" element={<Categorias />} />
-            <Route path="movimentacoes" element={<Movimentacoes />} /> */}
       </Route>
     </Routes>
   )
