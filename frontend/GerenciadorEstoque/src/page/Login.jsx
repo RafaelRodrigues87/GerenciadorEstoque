@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, Package } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 
@@ -30,7 +30,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-neutral-950">
-      {/* Painel de marca — só aparece em telas médias pra cima */}
+      {/* Painel de marca */}
       <div className="hidden md:flex md:w-[42%] bg-neutral-900 flex-col justify-between p-10 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-blue-600/20 blur-3xl" />
         <div className="absolute -bottom-32 -left-16 w-72 h-72 rounded-full bg-blue-500/10 blur-3xl" />
@@ -46,21 +46,26 @@ export default function Login() {
           <h1 className="text-3xl font-medium text-white leading-tight mb-3">
             Controle total do seu estoque, em qualquer lugar.
           </h1>
+
           <p className="text-neutral-400 text-sm leading-relaxed">
             Acompanhe vendas, produtos e alertas de reposição em tempo real,
             direto do computador ou do celular.
           </p>
         </div>
 
-        <p className="relative text-xs text-neutral-500">© 2026 EstoqueFácil</p>
+        <p className="relative text-xs text-neutral-500">
+          © 2026 EstoqueFácil
+        </p>
       </div>
 
       {/* Formulário */}
       <div className="flex-1 flex items-center justify-center p-6">
         <form onSubmit={handleSubmit} className="w-full max-w-md">
+
           <h2 className="text-2xl font-medium text-neutral-900 dark:text-neutral-100 mb-2">
             Bem-vindo de volta
           </h2>
+
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-8">
             Entre com sua conta para acessar o painel
           </p>
@@ -74,8 +79,13 @@ export default function Login() {
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
             E-mail
           </label>
+
           <div className="relative mb-5">
-            <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <Mail
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+            />
+
             <input
               type="email"
               value={email}
@@ -89,8 +99,13 @@ export default function Login() {
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
             Senha
           </label>
-          <div className="relative mb-8">
-            <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+
+          <div className="relative mb-4">
+            <Lock
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+            />
+
             <input
               type={mostrarSenha ? 'text' : 'password'}
               value={senha}
@@ -98,6 +113,7 @@ export default function Login() {
               required
               className="w-full pl-11 pr-11 py-3 text-base border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
             />
+
             <button
               type="button"
               onClick={() => setMostrarSenha((atual) => !atual)}
@@ -108,6 +124,15 @@ export default function Login() {
             </button>
           </div>
 
+          <div className="flex justify-end mb-6">
+            <Link
+              to="/EsqueciSenha"
+              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+            >
+              Esqueci minha senha
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={carregando}
@@ -115,6 +140,7 @@ export default function Login() {
           >
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
+
         </form>
       </div>
     </div>
