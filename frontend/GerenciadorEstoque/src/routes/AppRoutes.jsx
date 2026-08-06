@@ -9,13 +9,13 @@ import Vendas from '../page/Vendas'
 import Movimentacoes from '../page/Movimentacoes'
 import Usuarios from '../page/Usuarios'
 import MeuPerfil from '../page/MeuPerfil'
-import EsqueciSenha from '../page/EsqueciSenha'
+
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="esqueciSenha" element={<EsqueciSenha />} />
+      
       <Route
         element={
           <RotaPrivada>

@@ -1,0 +1,42 @@
+spring:
+  application:
+    name:
+
+  datasource:
+    url:
+    username:
+    password:
+    driver-class-name:
+
+  jpa:
+    hibernate:
+      ddl-auto:
+    show-sql:
+    properties:
+      hibernate:
+        format_sql:
+        dialect:
+
+  flyway:
+    enabled:
+    locations:
+    baseline-on-migrate:
+
+  mail:
+    host:
+    port:
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth:
+          starttls:
+            enable:
+
+jwt:
+  secret:
+  expiracao-ms:
+
+server:
+  port:
