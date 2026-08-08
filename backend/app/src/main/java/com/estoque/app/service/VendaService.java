@@ -3,6 +3,7 @@ package com.estoque.app.service;
 import com.estoque.app.dto.Response.*;
 import com.estoque.app.dto.Request.*;
 import com.estoque.app.entities.*;
+import com.estoque.app.enums.FormaPagamento;
 import com.estoque.app.enums.StatusVenda;
 import com.estoque.app.enums.TipoMovimentacao;
 import com.estoque.app.repository.MovimentacaoEstoqueRepository;
@@ -92,8 +93,6 @@ public class VendaService {
         return paraResponse(venda);
     }
 
-    // Desfaz uma venda sem apagar o registro: marca como CANCELADA e devolve
-    // o estoque de cada item, gerando movimentação de ENTRADA para auditoria.
     @Transactional
     public VendaResponse cancelar(Long vendaId, String emailUsuarioLogado) {
         Venda venda = vendaRepository.findById(vendaId)
@@ -133,8 +132,6 @@ public class VendaService {
         return paraResponse(venda);
     }
 
-    // Paginado: o front nunca carrega tudo de uma vez, só a "página" pedida.
-    // status é opcional — null retorna todas, informado filtra por CONCLUIDA/CANCELADA.
     public Page<VendaResponse> listarPaginado(Pageable pageable, StatusVenda status) {
         Page<Venda> pagina = (status != null)
                 ? vendaRepository.findByStatus(status, pageable)
@@ -157,6 +154,36 @@ public class VendaService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new ResumoVendasHojeResponse(total, vendasHoje.size());
+    }
+
+    // Relatório por período, com quebra por forma de pagamento — usado tanto
+    // no card "Vendas de hoje" do Dashboard (inicio = fim = hoje) quanto no
+    // filtro de relatório da tela de Vendas (semana, mês, ou intervalo customizado)
+    public RelatorioVendasResponse relatorio(LocalDate dataInicio, LocalDate dataFim) {
+        LocalDateTime inicio = dataInicio.atStartOfDay();
+        LocalDateTime fim = dataFim.atTime(LocalTime.MAX);
+
+        List<Venda> vendas = vendaRepository.findByDataHoraBetween(inicio, fim)
+                .stream()
+                .filter(v -> v.getStatus() == StatusVenda.CONCLUIDA)
+                .toList();
+
+        BigDecimal totalGeral = somarPorFiltro(vendas, v -> true);
+        BigDecimal totalDinheiro = somarPorFiltro(vendas, v -> v.getFormaPagamento() == FormaPagamento.DINHEIRO);
+        BigDecimal totalPix = somarPorFiltro(vendas, v -> v.getFormaPagamento() == FormaPagamento.PIX);
+        BigDecimal totalCartao = somarPorFiltro(vendas, v ->
+                v.getFormaPagamento() == FormaPagamento.CARTAO_CREDITO
+                        || v.getFormaPagamento() == FormaPagamento.CARTAO_DEBITO
+        );
+
+        return new RelatorioVendasResponse(totalGeral, vendas.size(), totalDinheiro, totalPix, totalCartao);
+    }
+
+    private BigDecimal somarPorFiltro(List<Venda> vendas, java.util.function.Predicate<Venda> filtro) {
+        return vendas.stream()
+                .filter(filtro)
+                .map(Venda::getValorTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private VendaResponse paraResponse(Venda venda) {

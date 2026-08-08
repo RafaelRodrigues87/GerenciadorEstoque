@@ -1,6 +1,7 @@
 package com.estoque.app.controller;
 
 import com.estoque.app.dto.Request.CriarVendaRequest;
+import com.estoque.app.dto.Response.RelatorioVendasResponse;
 import com.estoque.app.dto.Response.ResumoVendasHojeResponse;
 import com.estoque.app.dto.Response.VendaResponse;
 import com.estoque.app.enums.StatusVenda;
@@ -11,11 +12,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/vendas")
@@ -55,6 +59,14 @@ public class VendaController {
         return ResponseEntity.ok(vendaService.resumoHoje());
     }
 
+    // ?inicio=2026-08-01&fim=2026-08-07 — datas no formato ISO (yyyy-MM-dd)
+    @GetMapping("/relatorio")
+    public ResponseEntity<RelatorioVendasResponse> relatorio(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim
+    ) {
+        return ResponseEntity.ok(vendaService.relatorio(inicio, fim));
+    }
     @PatchMapping("/cancelar/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<VendaResponse> cancelar(@PathVariable Long id, Authentication authentication) {

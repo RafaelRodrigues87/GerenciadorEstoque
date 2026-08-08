@@ -5,7 +5,7 @@ export const vendaService = {
     const { data } = await api.get('/vendas/listar', {
       params: { page: pagina, size: tamanho, status },
     })
-    return data // { content, totalElements, totalPages, number, ... }
+    return data
   },
 
   async buscarPorId(id) {
@@ -20,6 +20,12 @@ export const vendaService = {
 
   async cancelar(id) {
     const { data } = await api.patch(`/vendas/cancelar/${id}`)
+    return data
+  },
+
+  // inicio e fim no formato 'yyyy-MM-dd'
+  async relatorio(inicio, fim) {
+    const { data } = await api.get('/vendas/relatorio', { params: { inicio, fim } })
     return data
   },
 }

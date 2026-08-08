@@ -26,6 +26,46 @@ const iconesFormaPagamento = {
 
 const TAMANHO_PAGINA = 20
 
+function formatarISO(data) {
+  return data.toISOString().split('T')[0]
+}
+function calcularIntervalo(periodo) {
+  const hoje = new Date()
+  const dataHoje = formatarISO(hoje)
+
+  if (periodo === 'hoje') {
+    return {
+      inicio: dataHoje,
+      fim: dataHoje
+    }
+  }
+
+  if (periodo === 'semana') {
+    const inicio = new Date(hoje)
+    inicio.setDate(inicio.getDate() - 6)
+
+    return {
+      inicio: formatarISO(inicio),
+      fim: dataHoje
+    }
+  }
+
+  if (periodo === 'mes') {
+    const inicio = new Date(
+      hoje.getFullYear(),
+      hoje.getMonth(),
+      1
+    )
+
+    return {
+      inicio: formatarISO(inicio),
+      fim: dataHoje
+    }
+  }
+
+  return null
+}
+
 export default function Vendas() {
   const { usuario } = useAuth()
   const ehAdmin = usuario?.papel === 'ADMIN'
@@ -42,6 +82,12 @@ export default function Vendas() {
   const [modalNovaVendaAberto, setModalNovaVendaAberto] = useState(false)
   const [vendaSelecionada, setVendaSelecionada] = useState(null)
 
+  const [periodo, setPeriodo] = useState('hoje')
+  const [dataInicioPersonalizada, setDataInicioPersonalizada] = useState(formatarISO(new Date()))
+  const [dataFimPersonalizada, setDataFimPersonalizada] = useState(formatarISO(new Date()))
+  const [relatorio, setRelatorio] = useState(null)
+  const [carregandoRelatorio, setCarregandoRelatorio] = useState(true)
+
   async function carregarVendas() {
     setCarregando(true)
     const pagina = await vendaService.listarPaginado({
@@ -54,9 +100,26 @@ export default function Vendas() {
     setCarregando(false)
   }
 
+  async function carregarRelatorio() {
+    const intervalo = periodo === 'personalizado'
+      ? { inicio: dataInicioPersonalizada, fim: dataFimPersonalizada }
+      : calcularIntervalo(periodo)
+
+    if (!intervalo) return
+
+    setCarregandoRelatorio(true)
+    const dados = await vendaService.relatorio(intervalo.inicio, intervalo.fim)
+    setRelatorio(dados)
+    setCarregandoRelatorio(false)
+  }
+
   useEffect(() => {
     carregarVendas()
   }, [paginaAtual, filtroStatus])
+
+  useEffect(() => {
+    carregarRelatorio()
+  }, [periodo, dataInicioPersonalizada, dataFimPersonalizada])
 
   useEffect(() => {
     produtoService.listarTodos().then(setProdutos)
@@ -72,6 +135,7 @@ export default function Vendas() {
     setModalNovaVendaAberto(false)
     setErroGeral('')
     await carregarVendas()
+    await carregarRelatorio()
   }
 
   async function abrirDetalhes(venda) {
@@ -88,6 +152,7 @@ export default function Vendas() {
     try {
       await vendaService.cancelar(venda.id)
       await carregarVendas()
+      await carregarRelatorio()
     } catch (err) {
       setErroGeral(err.response?.data?.mensagem ?? 'Não foi possível cancelar esta venda')
     }
@@ -99,9 +164,12 @@ export default function Vendas() {
   const formatarData = (data) =>
     new Date(data).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 
-  // Resumo rápido da página atual — só das vendas concluídas visíveis agora
-  const vendasConcluidasNaPagina = vendas.filter((v) => v.status === 'CONCLUIDA')
-  const totalNaPagina = vendasConcluidasNaPagina.reduce((soma, v) => soma + v.valorTotal, 0)
+  const rotulosPeriodo = {
+    hoje: 'Hoje',
+    semana: 'Últimos 7 dias',
+    mes: 'Este mês',
+    personalizado: 'Personalizado',
+  }
 
   return (
     <div className="p-6">
@@ -123,6 +191,105 @@ export default function Vendas() {
         </button>
       </div>
 
+      {/* Relatório por período */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 mb-6">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            Relatório · {rotulosPeriodo[periodo]}
+          </p>
+
+          <div className="flex gap-1.5">
+            {['hoje', 'semana', 'mes', 'personalizado'].map((opcao) => (
+              <button
+                key={opcao}
+                onClick={() => setPeriodo(opcao)}
+                className={`text-xs font-medium px-2.5 py-1.5 rounded-md ${
+                  periodo === opcao
+                    ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                }`}
+              >
+                {rotulosPeriodo[opcao]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {periodo === 'personalizado' && (
+          <div className="flex items-center gap-2 mb-4">
+            <input
+              type="date"
+              value={dataInicioPersonalizada}
+              onChange={(e) => setDataInicioPersonalizada(e.target.value)}
+              max={dataFimPersonalizada}
+              className="px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+            />
+            <span className="text-sm text-neutral-400">até</span>
+            <input
+              type="date"
+              value={dataFimPersonalizada}
+              onChange={(e) => setDataFimPersonalizada(e.target.value)}
+              min={dataInicioPersonalizada}
+              max={formatarISO(new Date())}
+              className="px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+            />
+          </div>
+        )}
+
+        {carregandoRelatorio || !relatorio ? (
+          <p className="text-sm text-neutral-400 py-4">Carregando relatório...</p>
+        ) : (
+          <>
+            <div className="flex items-end justify-between mb-4">
+              <p className="text-2xl font-medium text-neutral-900 dark:text-neutral-100">
+                {formatarMoeda(relatorio.totalGeral)}
+              </p>
+              <p className="text-xs text-neutral-400">
+                {relatorio.quantidadeVendas} {relatorio.quantidadeVendas === 1 ? 'venda' : 'vendas'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-950 flex items-center justify-center shrink-0">
+                  <Banknote size={15} className="text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-400">Dinheiro</p>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    {formatarMoeda(relatorio.totalDinheiro)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950 flex items-center justify-center shrink-0">
+                  <QrCode size={15} className="text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-400">Pix</p>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    {formatarMoeda(relatorio.totalPix)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center shrink-0">
+                  <CreditCard size={15} className="text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-400">Cartão</p>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    {formatarMoeda(relatorio.totalCartao)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
       <div className="flex items-center justify-between mb-5">
         <select
           value={filtroStatus}
@@ -133,15 +300,6 @@ export default function Vendas() {
           <option value="CONCLUIDA">Concluídas</option>
           <option value="CANCELADA">Canceladas</option>
         </select>
-
-        {!carregando && vendas.length > 0 && (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            {vendasConcluidasNaPagina.length} {vendasConcluidasNaPagina.length === 1 ? 'venda' : 'vendas'} nesta página ·{' '}
-            <span className="font-medium text-neutral-900 dark:text-neutral-100">
-              {formatarMoeda(totalNaPagina)}
-            </span>
-          </p>
-        )}
       </div>
 
       {erroGeral && (
@@ -177,9 +335,7 @@ export default function Vendas() {
             >
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                  cancelada
-                    ? 'bg-red-50 dark:bg-red-950'
-                    : 'bg-green-50 dark:bg-green-950'
+                  cancelada ? 'bg-red-50 dark:bg-red-950' : 'bg-green-50 dark:bg-green-950'
                 }`}
               >
                 {cancelada ? (
@@ -205,15 +361,11 @@ export default function Vendas() {
                 </div>
               </div>
 
-             <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-md shrink-0 w-24 text-center ${
-                    cancelada
-                      ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950'
-                      : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950'
-                  }`}
-                >
-                  {cancelada ? 'Cancelada' : 'Concluída'}
+              {cancelada && (
+                <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 px-2.5 py-1 rounded-md shrink-0">
+                  Cancelada
                 </span>
+              )}
 
               <p
                 className={`text-base font-medium w-28 text-right shrink-0 ${
@@ -225,7 +377,7 @@ export default function Vendas() {
                 {formatarMoeda(venda.valorTotal)}
               </p>
 
-              <div className="w-16 flex justify-end gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => abrirDetalhes(venda)}
                   className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
