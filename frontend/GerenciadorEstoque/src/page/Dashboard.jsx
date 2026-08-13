@@ -86,12 +86,12 @@ export default function Dashboard() {
           <p className="text-xl font-medium text-neutral-900 dark:text-neutral-100">{resumo.itensEmEstoque}</p>
         </div>
         <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg p-4">
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Valor em estoque</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Valor em estoque (custo)</p>
           <p className="text-xl font-medium text-neutral-900 dark:text-neutral-100">{formatarMoeda(resumo.valorEmEstoque)}</p>
         </div>
         <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg p-4">
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Vendas hoje</p>
-          <p className="text-xl font-medium text-neutral-900 dark:text-neutral-100">{formatarMoeda(resumo.vendasHoje)}</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Valor em estoque (venda)</p>
+          <p className="text-xl font-medium text-neutral-900 dark:text-neutral-100">{formatarMoeda(resumo.valorDoEstoque)}</p>
         </div>
         <div className="bg-red-50 dark:bg-red-950 rounded-lg p-4">
           <p className="text-xs text-red-700 dark:text-red-400 mb-1">Estoque baixo</p>

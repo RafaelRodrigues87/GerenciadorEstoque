@@ -40,6 +40,10 @@ public class DashboardService {
                 .map(p -> p.getPrecoCusto().multiply(BigDecimal.valueOf(p.getQuantidadeAtual())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal valorDoEstoque = produtosAtivos.stream()
+                .map(p -> p.getPrecoVenda().multiply(BigDecimal.valueOf(p.getQuantidadeAtual())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         long alertasEstoqueBaixo = produtoRepository.findComEstoqueBaixo().size();
 
         LocalDateTime inicioDoDia = LocalDate.now().atStartOfDay();
@@ -51,7 +55,7 @@ public class DashboardService {
                 .map(Venda::getValorTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new DashboardResumoResponse(itensEmEstoque, valorEmEstoque, totalVendasHoje, alertasEstoqueBaixo);
+        return new DashboardResumoResponse(itensEmEstoque, valorEmEstoque, valorDoEstoque, totalVendasHoje, alertasEstoqueBaixo);
     }
 
     // Agrupa o total vendido por dia, dos últimos N dias (incluindo hoje).
