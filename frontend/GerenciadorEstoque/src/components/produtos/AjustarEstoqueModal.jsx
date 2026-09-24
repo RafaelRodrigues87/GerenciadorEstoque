@@ -111,4 +111,4 @@ export default function AjustarEstoqueModal({ produto, onFechar, onAjustar }) {
       </div>
     </div>
   )
-}
+} 

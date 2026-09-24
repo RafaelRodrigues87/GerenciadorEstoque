@@ -4,6 +4,8 @@ import { produtoService } from '../services/produtoService'
 import { CategoriaService } from '../services/CategoriaService'
 import ProdutoFormModal from '../components/produtos/ProdutoFormModal'
 import AjustarEstoqueModal from '../components/produtos/AjustarEstoqueModal'
+import { MessageCircle } from 'lucide-react'
+import { gerarLinkWhatsAppEstoqueBaixo } from '../utils/whats'
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([])
@@ -75,10 +77,15 @@ export default function Produtos() {
       setErroGeral(err.response?.data?.mensagem ?? 'Não foi possível inativar este produto')
     }
   }
-
+  const produtosEmBaixa = produtos.filter((produto) => produto.ativo && produto.estoqueBaixo)
   const formatarMoeda = (valor) =>
     Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  
 
+  function handleEnviarWhatsApp() {
+  const link = gerarLinkWhatsAppEstoqueBaixo(produtosEmBaixa)
+  window.open(link, '_blank')
+  }
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -112,6 +119,15 @@ export default function Produtos() {
           className="w-full pl-9 pr-3 py-2 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
         />
       </div>
+       {produtosEmBaixa.length > 0 && (
+              <button
+                onClick={handleEnviarWhatsApp}
+                className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-lg border border-green-200 dark:border-green-900 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950 mb-5"
+              >
+                <MessageCircle size={16} />
+                Enviar lista de reposição ({produtosEmBaixa.length})
+              </button>
+            )}
 
       {erroGeral && (
         <div className="mb-4 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg px-3 py-2">
@@ -130,7 +146,8 @@ export default function Produtos() {
             {termoBusca ? 'Nenhum produto encontrado para essa busca' : 'Nenhum produto cadastrado ainda'}
           </p>
         </div>
-      )}
+      )}   
+      
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {produtosFiltrados.map((produto) => (
@@ -160,6 +177,7 @@ export default function Produtos() {
             <p className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-3">
               {formatarMoeda(produto.precoVenda)}
             </p>
+           
 
             <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
               <div className="text-xs text-neutral-500 dark:text-neutral-400">

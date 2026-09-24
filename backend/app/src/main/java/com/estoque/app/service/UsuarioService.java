@@ -107,6 +107,13 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    public void desativarMinhaConta(String email){
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Usuaior logado nao encontrado "));
+        usuario.setAtivo(false);
+        usuarioRepository.save(usuario);
+    }
+
     private Usuario buscarOuFalhar(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));

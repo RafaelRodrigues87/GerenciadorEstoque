@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { User, Lock, Check, Settings, ShieldAlert, Mail, Monitor, Trash2, Pencil } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useTheme } from '../theme/ThemeContext'
-import { usuarioService } from '../services/usuarioService'
+import { usuarioService } from '../services/UsuarioService'
 import ConfirmModal from '../components/common/ConfirmModal'
 import EditarPerfilModal from '../components/Usuarios/EditarPerfilModal'
 import AlterarSenhaModal from '../components/Usuarios/AlterarSenhaModal'
+
 
 export default function MeuPerfil() {
   const { usuario, atualizarUsuarioLocal } = useAuth()
@@ -23,7 +25,10 @@ export default function MeuPerfil() {
   const [salvandoSenha, setSalvandoSenha] = useState(false)
   const [erroSenha, setErroSenha] = useState('')
   const [sucessoSenha, setSucessoSenha] = useState(false)
-
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const [modalDesativarContaAberto, setModalDesativarContaAberto] = useState(false)
+  const [desativando, setDesativando] = useState(false)
   useEffect(() => {
     usuarioService.buscarMeuPerfil().then((dados) => setCriadoEm(dados.criadoEm))
   }, [])
@@ -49,6 +54,19 @@ export default function MeuPerfil() {
     setSucessoPerfil(true)
     setTimeout(() => setSucessoPerfil(false), 3000)
   }
+
+  async function confirmarDesativarConta(){
+    setDesativando(true)
+    try{
+      await usuarioService.desativarConta()
+      logout()
+      navigate('/login')
+    }catch(err){
+      setDesativando(false)
+      setModalDesativarContaAberto(false)
+      }
+    }
+  
 
   // 1º passo: o modal de formulário valida e devolve os dados aqui
   function handleSenhaValidada(dados) {
@@ -260,14 +278,13 @@ export default function MeuPerfil() {
             <p className="text-sm text-neutral-900 dark:text-neutral-100">Excluir minha conta</p>
             <p className="text-xs text-neutral-400">Essa ação não pode ser desfeita — em breve</p>
           </div>
-          <button
-            disabled
-            title="Ainda não implementado"
-            className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-lg border border-red-200 dark:border-red-900 text-red-300 dark:text-red-800 cursor-not-allowed"
-          >
-            <Trash2 size={14} />
-            Excluir conta
-          </button>
+        <button
+             onClick={()=> setModalDesativarContaAberto(true)}
+             className='flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-lg border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950'
+              >
+                <Trash2 size={14} />
+              Excluir Conta
+             </button>
         </div>
       </div>
 
@@ -296,6 +313,17 @@ export default function MeuPerfil() {
           onFechar={() => setModalConfirmacaoSenhaAberto(false)}
         />
       )}
+
+      {modalDesativarContaAberto && (
+          <ConfirmModal
+            titulo="Desativar sua conta?"
+            mensagem="Você será deslogado imediatamente e não poderá mais acessar o sistema até que um administrador reative sua conta. Tem certeza?"
+            textoConfirmar="Sim, desativar conta"
+            confirmando={desativando}
+            onConfirmar={confirmarDesativarConta}
+            onFechar={() => setModalDesativarContaAberto(false)}
+          />
+        )}
     </div>
   )
 }

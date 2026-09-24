@@ -6,9 +6,11 @@ import com.estoque.app.dto.Response.UsuarioResponse;
 import com.estoque.app.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,7 +21,7 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-
+    private final AuthenticationManager authenticationManager;
     @PostMapping("/criar")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioResponse> criar(@Valid @RequestBody CriarUsuarioRequest request) {
@@ -46,10 +48,18 @@ public class UsuarioController {
         usuarioService.inativar(id);
         return ResponseEntity.noContent().build();
     }
+
+
     @PatchMapping("/reativar/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> reativar(@PathVariable Long id){
         usuarioService.reativar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/desativarConta")
+    public ResponseEntity<Void> desativarConta(Authentication authentication){
+        usuarioService.desativarMinhaConta(authentication.getName());
         return ResponseEntity.noContent().build();
     }
 

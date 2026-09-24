@@ -1,0 +1,36 @@
+assertEquals()
+→ verifica o resultado
+
+assertThrows()
+→ verifica uma exceção
+
+verify()
+→ verifica uma interação com um mock
+
+////////////////////////////////////////////////////////////
+WHEN
+ ↓
+CONFIGURA o mock
+
+VERIFY
+ ↓
+VERIFICA a interação com o mock
+/////////////////////////////////////////////////////////////////////
+verify(repository).metodo()
+        ↓
+espero que tenha chamado
+
+verify(repository, never()).metodo()
+        ↓
+espero que NÃO tenha chamado
+///////////////////////////////
+
+| Ferramenta       | Para que serve                            |
+| ---------------- | ----------------------------------------- |
+| `@Mock`          | cria uma dependência falsa                |
+| `@InjectMocks`   | injeta os mocks na classe testada         |
+| `when()`         | configura o comportamento do mock         |
+| `thenReturn()`   | define o que o mock retorna               |
+| `assertEquals()` | verifica um resultado                     |
+| `assertThrows()` | verifica uma exceção                      |
+| `verify()`       | verifica se um método do mock foi chamado |

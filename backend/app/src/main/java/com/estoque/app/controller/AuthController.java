@@ -8,22 +8,23 @@ import com.estoque.app.entities.Usuario;
 import com.estoque.app.repository.UsuarioRepository;
 import com.estoque.app.security.JwtService;
 import com.estoque.app.service.RecuperacaoSenhaService;
+import com.estoque.app.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
+    private final UsuarioService usuarioService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
@@ -68,4 +69,8 @@ public class AuthController {
         recuperacaoSenhaService.redefinirSenha(request);
         return ResponseEntity.noContent().build();
     }
+
+
+
+
 }

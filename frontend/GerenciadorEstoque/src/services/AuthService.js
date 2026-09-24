@@ -13,4 +13,6 @@ export const authService = {
   async redefinirSenha(email, codigo, novaSenha) {
     await api.post('/auth/redefinir-senha', { email, codigo, novaSenha })
   },
+
+
 }

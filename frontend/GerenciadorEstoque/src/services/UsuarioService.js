@@ -24,17 +24,23 @@ export const usuarioService = {
     await api.patch(`/usuarios/reativar/${id}`)
   },
 
+
+
   async buscarMeuPerfil() {
-    const { data } = await api.get('/usuarios/meu-perfil')
+    const { data } = await api.get('/usuarios/meuperfil')
     return data
   },
 
   async atualizarMeuPerfil(dados) {
-    const { data } = await api.put('/usuarios/meu-perfil', dados)
+    const { data } = await api.put('/usuarios/meuperfil', dados)
     return data
   },
 
   async alterarSenha(dados) {
     await api.patch('/usuarios/alterar-senha', dados)
+  },
+
+   async desativarConta(){
+    await api.patch(`/usuarios/desativarConta`)
   },
 }
